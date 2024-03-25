@@ -15,4 +15,10 @@ export default (app: Application) => {
   const { controller, router } = app;
   //健康检查
   router.get('/healthCheck', controller.home.healthCheck);
+
+  router.get('/entry', controller.home.index);
+  router.get('/entry/canvas', controller.home.canvas);
+  router.get('/entry/preview', controller.home.preview);
+  router.get('/entry/previewApp', controller.home.previewApp);
+  router.get('/artify', controller.home.artify);
 };

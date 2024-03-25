@@ -78,6 +78,15 @@ export default (app: Application) => {
   subRouter.post('/source_tpl/update/:id', controller.appCenter.sourceTpl.update);
   subRouter.get('/source_tpl/delete/:id', controller.appCenter.sourceTpl.delete);
 
+  // workflows
+  subRouter.get('/workflows', controller.appCenter.workflows.find);
+  subRouter.get('/workflows/view', controller.appCenter.workflows.view);
+  subRouter.post('/workflows/create', controller.appCenter.workflows.create);
+  subRouter.post('/workflows/update/:id', controller.appCenter.workflows.update);
+  subRouter.post('/workflows/queue', controller.appCenter.workflows.queue);
+  subRouter.post('/workflows/upload/image', controller.appCenter.workflows.uploadImage);
+  subRouter.get('/workflows/delete/:id', controller.appCenter.workflows.delete);
+
   // dataSource
   subRouter.get('/sources/list/:aid', controller.appCenter.sources.list);
   subRouter.get('/sources/detail/:id', controller.appCenter.sources.detail);

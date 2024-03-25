@@ -26,7 +26,18 @@ export default (appInfo) => {
   config.keys = 'tiny_engine';
 
   // add your egg config in here
-  config.middleware = ['errorResponse', 'beforRequest'];
+  config.middleware = ['httpProxy', 'errorResponse', 'beforRequest'];
+
+  const comfyuiOrigin = 'http://localhost:8188'
+
+  config.httpProxy = {
+    '/comfyui': {
+      target: comfyuiOrigin,
+      changeOrigin: true,
+      ws: false,
+      pathRewrite: { '^/comfyui': '' },
+    },
+  }
 
   config.logger = {
     dir: `/opt/cloud/logs/${appInfo.name}`,
@@ -305,6 +316,14 @@ export default (appInfo) => {
   config.userName = process.env.GIT_USERNAME;
   config.userToken = process.env.GIT_USER_TOKEN;
   config.email = process.env.GIT_EMAIL;
+
+  config.static = {
+    prefix: ''
+  };
+  config.view = {
+    root: path.join(appInfo.baseDir, 'app/view'),
+    defaultViewEngine: 'nunjucks'
+  }
 
   return config;
 };

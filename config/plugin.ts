@@ -43,6 +43,10 @@ const plugin: EggPlugin = {
   routerPlus: {
     enable: true,
     package: 'egg-router-plus'
+  },
+  nunjucks: {
+    enable: true,
+    package: 'egg-view-nunjucks'
   }
 };
 

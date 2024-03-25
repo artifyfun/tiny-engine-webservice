@@ -249,6 +249,33 @@ export interface I_DeleteI18nEntry {
   host_type: string;
 }
 
+// workflows
+
+export interface I_CreateWorkflow {
+  workflow: string;
+  paramsNodes: string;
+  key: string;
+  prompt: string;
+  description: string;
+  name: string;
+  imageUrl: string;
+  workflowType: string;
+  app: number;
+}
+
+export interface I_UpdateWorkflow {
+  workflow?: string;
+  paramsNodes?: string;
+  key?: string;
+  prompt?: string;
+  description?: string;
+  name?: string;
+  imageUrl?: string;
+  workflowType?: string;
+  app?: number;
+  id: string | number;
+}
+
 // schema 操作接口
 export interface I_SchemaFormatFunc {
   [propsName: string]: E_SchemaFormatFunc;

@@ -13,6 +13,8 @@ coverage
 .nyc_output
 run/*
 dist/*
+app/public/*
+app/view/*
 yarn.lock
 w3.info.js
 .tmp
