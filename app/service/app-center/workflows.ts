@@ -15,6 +15,9 @@ import { I_CreateWorkflow, I_Response, I_UpdateWorkflow } from '../../lib/interf
 import DataService from '../dataService';
 import merge from 'deepmerge-json';
 
+// import { ComfyUIClient } from 'comfy-ui-client';
+// import type { Prompt } from 'comfy-ui-client';
+
 const comfyuiHost = 'http://localhost:8188'
 
 function getSeed(n) {
