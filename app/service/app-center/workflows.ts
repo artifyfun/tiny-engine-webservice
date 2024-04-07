@@ -39,24 +39,6 @@ const uploadImage = (
   );
 }
 
-const getImage = (
-  filename: string,
-  subfolder: string,
-  type: string,
-) => {
-  // Create client ID
-  const clientId = uuidv4();
-
-  // Create client
-  const client = new ComfyUIClient(comfyuiHost, clientId);
-
-  return client.getImage(
-    filename,
-    subfolder,
-    type,
-  );
-}
-
 const getOutputs = (
   prompt: Prompt,
 ): Promise<PromptHistory> => {
@@ -132,8 +114,10 @@ class Workflows extends DataService {
     return this.query({ url: `workflows?${query}` });
   }
 
-  view(param) {
-    return getImage(param.filename, param.subfolder, param.type)
+  async view(querystring) {
+    return this.ctx.curl(`${comfyuiHost}/view?${querystring}`, {
+      streaming: true
+    })
   }
 
   uploadImage(param) {
@@ -167,7 +151,7 @@ class Workflows extends DataService {
           }
         })
 
-        const outputs = await getOutputs(prompt)
+        const { outputs } = await getOutputs(prompt)
         const { paramsNodes } = workflow
         const outputKeys = paramsNodes.filter(item => item.category === 'output').map(item => item.id.toString())
         response = {}

@@ -23,9 +23,9 @@ export default class WorkflowsController extends Controller {
     this.ctx.body = await this.service.appCenter.workflows.find(queries);
   }
   async view() {
-    const queries = this.ctx.queries;
-    const res = await this.service.appCenter.workflows.view(queries);
-    this.ctx.body = res;
+    const querystring = this.ctx.querystring;
+    const res = await this.service.appCenter.workflows.view(querystring);
+    this.ctx.body = res.res;
   }
   async create() {
     const payload = this.ctx.request.body;
