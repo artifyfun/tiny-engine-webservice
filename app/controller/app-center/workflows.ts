@@ -25,7 +25,7 @@ export default class WorkflowsController extends Controller {
   async view() {
     const queries = this.ctx.queries;
     const res = await this.service.appCenter.workflows.view(queries);
-    this.ctx.body = res.res;
+    this.ctx.body = res;
   }
   async create() {
     const payload = this.ctx.request.body;
@@ -62,5 +62,21 @@ export default class WorkflowsController extends Controller {
       message
     };
     return this.ctx.helper.getResponseData(null, error);
+  }
+  state() {
+    const { ctx, app } = this;
+    const nsp: any = app.io.of('/workflows');
+    const message = ctx.args[0] || {};
+    const socket = ctx.socket;
+    const client = socket.id;
+
+    try {
+      const { target, payload } = message;
+      if (!target) return;
+      const msg = ctx.helper.parseMsg('state', payload, { client, target });
+      nsp.emit(target, msg);
+    } catch (error) {
+      app.logger.error(error);
+    }
   }
 }

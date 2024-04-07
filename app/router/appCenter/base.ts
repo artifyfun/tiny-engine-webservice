@@ -15,7 +15,8 @@ export default (app: Application) => {
   const {
     controller,
     router,
-    middleware: { verifyRequiredParam }
+    middleware: { verifyRequiredParam },
+    io
   } = app;
 
   const ROUTER_PREFIX = '/app-center/api';
@@ -86,6 +87,7 @@ export default (app: Application) => {
   subRouter.post('/workflows/queue', controller.appCenter.workflows.queue);
   subRouter.post('/workflows/upload/image', controller.appCenter.workflows.uploadImage);
   subRouter.get('/workflows/delete/:id', controller.appCenter.workflows.delete);
+  io.of('/workflows').route('state', controller.appCenter.workflows.state);
 
   // dataSource
   subRouter.get('/sources/list/:aid', controller.appCenter.sources.list);

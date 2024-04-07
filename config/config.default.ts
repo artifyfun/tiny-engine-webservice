@@ -26,18 +26,33 @@ export default (appInfo) => {
   config.keys = 'tiny_engine';
 
   // add your egg config in here
-  config.middleware = ['httpProxy', 'errorResponse', 'beforRequest'];
+  config.middleware = [
+    // 'httpProxy',
+    'errorResponse',
+    'beforRequest'
+  ];
 
-  const comfyuiOrigin = 'http://localhost:8188'
+  // const comfyuiOrigin = 'http://127.0.0.1:8188'
 
-  config.httpProxy = {
-    '/comfyui': {
-      target: comfyuiOrigin,
-      changeOrigin: true,
-      ws: false,
-      pathRewrite: { '^/comfyui': '' },
+  // config.httpProxy = {
+  //   '/comfyui': {
+  //     target: comfyuiOrigin,
+  //     changeOrigin: true,
+  //     ws: true,
+  //     pathRewrite: { '^/comfyui': '' },
+  //   },
+  // }
+
+  // socket.io
+  config.io = {
+    init: {},
+    namespace: {
+      '/workflows': {
+        connectionMiddleware: ['connection'],
+        packetMiddleware: ['packet'],
+      },
     },
-  }
+  };
 
   config.logger = {
     dir: `/opt/cloud/logs/${appInfo.name}`,

@@ -14,11 +14,76 @@ import { E_Method } from '../../lib/enum';
 import { I_CreateWorkflow, I_Response, I_UpdateWorkflow } from '../../lib/interface';
 import DataService from '../dataService';
 import merge from 'deepmerge-json';
+import { v4 as uuidv4 } from 'uuid';
 
-// import { ComfyUIClient } from 'comfy-ui-client';
-// import type { Prompt } from 'comfy-ui-client';
+import { ComfyUIClient } from '@artifyfun/comfy-ui-client';
+import type { Prompt, PromptHistory } from '@artifyfun/comfy-ui-client';
 
-const comfyuiHost = 'http://localhost:8188'
+const comfyuiHost = '127.0.0.1:8188'
+
+const uploadImage = (
+  image: Buffer,
+  filename: string,
+  overwrite?: boolean,
+) => {
+  // Create client ID
+  const clientId = uuidv4();
+
+  // Create client
+  const client = new ComfyUIClient(comfyuiHost, clientId);
+
+  return client.uploadImage(
+    image,
+    filename,
+    overwrite
+  );
+}
+
+const getImage = (
+  filename: string,
+  subfolder: string,
+  type: string,
+) => {
+  // Create client ID
+  const clientId = uuidv4();
+
+  // Create client
+  const client = new ComfyUIClient(comfyuiHost, clientId);
+
+  return client.getImage(
+    filename,
+    subfolder,
+    type,
+  );
+}
+
+const getOutputs = (
+  prompt: Prompt,
+): Promise<PromptHistory> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Create client ID
+      const clientId = uuidv4();
+
+      // Create client
+      const client = new ComfyUIClient(comfyuiHost, clientId);
+
+      // Connect to server
+      await client.connect();
+
+      // Get result
+      const result = await client.getResult(prompt);
+
+      resolve(result);
+
+      // Disconnect
+      await client.disconnect();
+    }
+    catch (error) {
+      reject(error);
+    }
+  });
+};
 
 function getSeed(n) {
   let num = "";
@@ -30,92 +95,6 @@ function getSeed(n) {
     }
   }
   return Number(num);
-}
-
-const workflowApis = {
-  comfyui: {
-    queue: function(param, workflow) {
-      const { ctx } = this as any
-      const {
-        prompt
-      } = param
-      
-      const fullPrompt = JSON.parse(JSON.stringify(workflow.prompt.output))
-      const result = merge(fullPrompt, prompt)
-
-      Object.keys(workflow.prompt.output).forEach(key => {
-        const item = workflow.prompt.output[key]
-        const target = result[key]
-        if (typeof item.inputs?.seed === 'number' && typeof prompt[key]?.inputs?.seed !== 'number') {
-          target.inputs.seed = getSeed(15)
-        }
-      })
-      return ctx.curl(`${comfyuiHost}/prompt`, {
-        method: E_Method.Post,
-        dataType: 'json',
-        data: JSON.stringify({
-          prompt: result
-        })
-      })
-    },
-    loopState: function(param, prompt_id) {
-      const { ctx } = this as any
-      const {
-      } = param
-
-      function getHistory() {
-        return new Promise((resolve, reject) => {
-          ctx.curl(`${comfyuiHost}/history/${prompt_id}`, {
-            method: E_Method.Get,
-            dataType: 'json',
-          })
-            .then((res) => {
-              resolve(res.data[prompt_id]);
-            })
-            .catch((error) => {
-              reject(error);
-            });
-        });
-      }
-
-      function sleep(time) {
-        return new Promise((resolve) => setTimeout(resolve, time));
-      }
-
-      return new Promise(async (resolve, reject) => {
-        for (let i = 0; i < 300; i++) {
-          const history: any = await getHistory();
-          if (history?.outputs) {
-            resolve(history.outputs);
-            break;
-          }
-          await sleep(1000);
-        }
-        reject();
-      });
-
-    },
-    view: function(param) {
-      const { ctx } = this as any
-      const {
-        filename
-      } = param
-
-      return ctx.curl(`${comfyuiHost}/view?filename=${filename}&type=output`, {
-        streaming: true
-      })
-
-    },
-    uploadImage: function(files) {
-      const { ctx } = this as any
-      
-      return ctx.curl(`${comfyuiHost}/upload/image`, {
-        type: E_Method.Post,
-        files
-      })
-
-    },
-  }
 }
 
 class Workflows extends DataService {
@@ -154,11 +133,11 @@ class Workflows extends DataService {
   }
 
   view(param) {
-    return workflowApis.comfyui.view.call(this, param)
+    return getImage(param.filename, param.subfolder, param.type)
   }
 
   uploadImage(param) {
-    return workflowApis.comfyui.uploadImage.call(this, param)
+    return uploadImage(param.image, param.filename, param.overwrite)
   }
 
   async queue(param) {
@@ -176,17 +155,32 @@ class Workflows extends DataService {
     }
     let response: any = null;
     try {
-      const res = await workflowApis[workflow.workflowType].queue.call(this, param, workflow)
-      const outputs = await workflowApis[workflow.workflowType].loopState.call(this, param, res.data.prompt_id)
-      const { paramsNodes } = workflow
-      const outputKeys = paramsNodes.filter(item => item.category === 'output').map(item => item.id.toString())
-      response = {}
-      Object.keys(outputs).forEach(key => {
-        if (outputKeys.includes(key)) {
-          const imageUrls = outputs[key]?.images.filter(item => item.type === 'output').map(item => `/app-center/api/workflows/view?filename=${item.filename}&type=output`) || []
-          response[key] = imageUrls.length ? imageUrls[imageUrls.length - 1] : outputs[key]
-        }
-      })
+      if (workflow.workflowType === 'comfyui') {
+        const fullPrompt = JSON.parse(JSON.stringify(workflow.prompt.output))
+        const prompt = merge(fullPrompt, param.prompt)
+
+        Object.keys(workflow.prompt.output).forEach(key => {
+          const item = workflow.prompt.output[key]
+          const target = prompt[key]
+          if (typeof item.inputs?.seed === 'number' && typeof param.prompt[key]?.inputs?.seed !== 'number') {
+            target.inputs.seed = getSeed(15)
+          }
+        })
+
+        const outputs = await getOutputs(prompt)
+        const { paramsNodes } = workflow
+        const outputKeys = paramsNodes.filter(item => item.category === 'output').map(item => item.id.toString())
+        response = {}
+        Object.keys(outputs).forEach(key => {
+          if (outputKeys.includes(key)) {
+            const imageUrls = outputs[key]?.images.filter(item => item.type === 'output').map(item => `/app-center/api/workflows/view?filename=${item.filename}&type=output`) || []
+            response[key] = imageUrls.length ? imageUrls[imageUrls.length - 1] : outputs[key]
+          }
+        })
+      }
+      else {
+        throw new Error(`工作流类型暂不支持: ${workflow.workflowType}`);
+      }
     } catch (e: any) {
       throw new Error(`工作流执行失败: ${(e as Error).message}`);
     }
