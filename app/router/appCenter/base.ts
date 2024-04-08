@@ -15,8 +15,7 @@ export default (app: Application) => {
   const {
     controller,
     router,
-    middleware: { verifyRequiredParam },
-    io
+    middleware: { verifyRequiredParam }
   } = app;
 
   const ROUTER_PREFIX = '/app-center/api';
@@ -78,16 +77,6 @@ export default (app: Application) => {
   subRouter.post('/source_tpl/create', controller.appCenter.sourceTpl.create);
   subRouter.post('/source_tpl/update/:id', controller.appCenter.sourceTpl.update);
   subRouter.get('/source_tpl/delete/:id', controller.appCenter.sourceTpl.delete);
-
-  // workflows
-  subRouter.get('/workflows', controller.appCenter.workflows.find);
-  subRouter.get('/workflows/view', controller.appCenter.workflows.view);
-  subRouter.post('/workflows/create', controller.appCenter.workflows.create);
-  subRouter.post('/workflows/update/:id', controller.appCenter.workflows.update);
-  subRouter.post('/workflows/queue', controller.appCenter.workflows.queue);
-  subRouter.post('/workflows/upload/image', controller.appCenter.workflows.uploadImage);
-  subRouter.get('/workflows/delete/:id', controller.appCenter.workflows.delete);
-  io.of('/workflows').route('state', controller.appCenter.workflows.state);
 
   // dataSource
   subRouter.get('/sources/list/:aid', controller.appCenter.sources.list);

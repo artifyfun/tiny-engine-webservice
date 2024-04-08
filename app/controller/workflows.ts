@@ -10,7 +10,7 @@
 *
 */
 import { Controller } from 'egg';
-import { E_ErrorCode } from '../../lib/enum';
+import { E_ErrorCode } from '../lib/enum';
 
 const isValidParam = (id) => /^\d+$/.test(id);
 
@@ -20,24 +20,24 @@ const isValidParam = (id) => /^\d+$/.test(id);
 export default class WorkflowsController extends Controller {
   async find() {
     const queries = this.ctx.queries;
-    this.ctx.body = await this.service.appCenter.workflows.find(queries);
+    this.ctx.body = await this.service.workflows.find(queries);
   }
   async view() {
     const querystring = this.ctx.querystring;
-    const res = await this.service.appCenter.workflows.view(querystring);
+    const res = await this.service.workflows.view(querystring);
     this.ctx.body = res.res;
   }
   async create() {
     const payload = this.ctx.request.body;
-    this.ctx.body = await this.service.appCenter.workflows.create(payload);
+    this.ctx.body = await this.service.workflows.create(payload);
   }
   async uploadImage() {
     const files = this.ctx.request.files
-    this.ctx.body = await this.service.appCenter.workflows.uploadImage(files);
+    this.ctx.body = await this.service.workflows.uploadImage(files);
   }
   async queue() {
     const payload = this.ctx.request.body;
-    this.ctx.body = await this.service.appCenter.workflows.queue(payload);
+    this.ctx.body = await this.service.workflows.queue(payload);
   }
   async update() {
     const { id } = this.ctx.params;
@@ -46,7 +46,7 @@ export default class WorkflowsController extends Controller {
       return;
     }
     const payload = this.ctx.request.body;
-    this.ctx.body = await this.service.appCenter.workflows.update({ ...payload, id });
+    this.ctx.body = await this.service.workflows.update({ ...payload, id });
   }
   async delete() {
     const { id } = this.ctx.params;
@@ -54,7 +54,7 @@ export default class WorkflowsController extends Controller {
       this.ctx.body = this.getBadRequestResponse('id should be integer');
       return;
     }
-    this.ctx.body = await this.service.appCenter.workflows.delete(id);
+    this.ctx.body = await this.service.workflows.delete(id);
   }
   getBadRequestResponse(message) {
     const error = {
