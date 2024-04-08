@@ -12,7 +12,7 @@
 import { Application } from 'egg';
 
 export default (app: Application) => {
-  const { controller, router } = app;
+  const { controller, router, io } = app;
   //健康检查
   router.get('/healthCheck', controller.home.healthCheck);
 
@@ -21,4 +21,6 @@ export default (app: Application) => {
   router.get('/entry/preview', controller.home.preview);
   router.get('/entry/previewApp', controller.home.previewApp);
   router.get('/artifyfun', controller.home.artifyfun);
+
+  io.of('/').route('workflows', io.controller.workflows.state);
 };

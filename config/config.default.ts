@@ -47,7 +47,7 @@ export default (appInfo) => {
   config.io = {
     init: {},
     namespace: {
-      '/workflows': {
+      '/': {
         connectionMiddleware: ['connection'],
         packetMiddleware: ['packet'],
       },

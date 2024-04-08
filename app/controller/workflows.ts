@@ -65,7 +65,7 @@ export default class WorkflowsController extends Controller {
   }
   state() {
     const { ctx, app } = this;
-    const nsp: any = app.io.of('/workflows');
+    const nsp: any = app.io.of('/');
     const message = ctx.args[0] || {};
     const socket = ctx.socket;
     const client = socket.id;

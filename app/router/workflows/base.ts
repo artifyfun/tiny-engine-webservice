@@ -15,7 +15,6 @@ export default (app: Application) => {
   const {
     controller,
     router,
-    io
   } = app;
 
   const ROUTER_PREFIX = '/workflows/api';
@@ -29,6 +28,4 @@ export default (app: Application) => {
   subRouter.post('/queue', controller.workflows.queue);
   subRouter.post('/upload/image', controller.workflows.uploadImage);
   subRouter.get('/delete/:id', controller.workflows.delete);
-  io.of('/workflows').route('state', controller.workflows.state);
-
 };
