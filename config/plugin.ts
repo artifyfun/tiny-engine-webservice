@@ -48,10 +48,10 @@ const plugin: EggPlugin = {
     enable: true,
     package: 'egg-view-nunjucks'
   },
-  io: {
+  websocket: {
     enable: true,
-    package: 'egg-socket.io',
-  },
+    package: 'egg-websocket-plugin',
+  }
 };
 
 export default plugin;

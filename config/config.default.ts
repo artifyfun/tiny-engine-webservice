@@ -43,16 +43,6 @@ export default (appInfo) => {
   //   },
   // }
 
-  // socket.io
-  config.io = {
-    init: {},
-    namespace: {
-      '/': {
-        connectionMiddleware: ['connection'],
-        packetMiddleware: ['packet'],
-      },
-    },
-  };
 
   config.logger = {
     dir: `/opt/cloud/logs/${appInfo.name}`,

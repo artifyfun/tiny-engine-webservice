@@ -63,20 +63,22 @@ export default class WorkflowsController extends Controller {
     };
     return this.ctx.helper.getResponseData(null, error);
   }
-  state() {
-    const { ctx, app } = this;
-    const nsp: any = app.io.of('/');
-    const message = ctx.args[0] || {};
-    const socket = ctx.socket;
-    const client = socket.id;
-
-    try {
-      const { target, payload } = message;
-      if (!target) return;
-      const msg = ctx.helper.parseMsg('state', payload, { client, target });
-      nsp.emit(target, msg);
-    } catch (error) {
-      app.logger.error(error);
+  async state() {
+    const { ctx } = this;
+    if (!ctx.websocket) {
+      throw new Error('this function can only be use in websocket router');
     }
+
+    console.log('client connected');
+
+    ctx.websocket.send("connected");
+
+    ctx.websocket
+      .on('message', (msg) => {
+        console.log('receive', msg);
+      })
+      .on('close', (code, reason) => {
+        console.log('websocket closed', code, reason);
+      });
   }
 }
