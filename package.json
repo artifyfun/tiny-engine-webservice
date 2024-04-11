@@ -44,7 +44,7 @@
     "branches": 60
   },
   "dependencies": {
-    "@artifyfun/comfy-ui-client": "^0.1.6",
+    "@artifyfun/comfy-ui-client": "^0.1.7",
     "@opentiny/tiny-engine-block-build": "^0.0.1-alpha.0",
     "@opentiny/tiny-engine-dsl-vue": "~1.0.1",
     "@opentiny/tiny-engine-transform": "^1.0.0-alpha.1",
