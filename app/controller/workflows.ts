@@ -71,11 +71,17 @@ export default class WorkflowsController extends Controller {
 
     console.log('client connected');
 
+    ctx.websocket.room.join('workflows');
+
     ctx.websocket.send("connected");
 
     ctx.websocket
       .on('message', (msg) => {
         console.log('receive', msg);
+        // 心跳检测
+        if (msg === 'ping') {
+          ctx.websocket?.send('pong');
+        }
       })
       .on('close', (code, reason) => {
         console.log('websocket closed', code, reason);

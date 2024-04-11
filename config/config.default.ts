@@ -43,6 +43,23 @@ export default (appInfo) => {
   //   },
   // }
 
+  config.redis = {
+    client: {
+      port: 6379,          // Redis port
+      host: '127.0.0.1',   // Redis host
+      password: 'auth',
+      db: 0,
+    },
+  }
+
+  config.websocket = {
+    // 配置 websocket 使用 redis 作消息广播，配置项目参见 ioredis
+    redis: {
+      host: '127.0.0.1',
+      port: 6379,
+    },
+  };
+
 
   config.logger = {
     dir: `/opt/cloud/logs/${appInfo.name}`,

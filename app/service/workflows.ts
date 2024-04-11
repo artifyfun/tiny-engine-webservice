@@ -140,6 +140,8 @@ class Workflows extends DataService {
     let response: any = null;
     try {
       if (workflow.workflowType === 'comfyui') {
+        this.app.ws.sendJsonTo('workflows', { key, status: 'running' })
+        
         const fullPrompt = JSON.parse(JSON.stringify(workflow.prompt.output))
         const prompt = merge(fullPrompt, param.prompt)
 

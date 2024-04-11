@@ -29,7 +29,7 @@ const plugin: EggPlugin = {
   session: true,
   // 用于连接redis 使用时请按需打开
   redis: {
-    enable: false,
+    enable: true,
     package: 'egg-redis'
   },
   validate: {
