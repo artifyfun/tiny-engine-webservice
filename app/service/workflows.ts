@@ -40,15 +40,14 @@ const uploadImage = (
 }
 
 const getOutputs = (
+  clientId,
   prompt: Prompt,
+  eventEmitter?: (type: string, data: any) => void
 ): Promise<PromptHistory> => {
   return new Promise(async (resolve, reject) => {
     try {
-      // Create client ID
-      const clientId = uuidv4();
-
       // Create client
-      const client = new ComfyUIClient(comfyuiHost, clientId);
+      const client = new ComfyUIClient(comfyuiHost, clientId, eventEmitter);
 
       // Connect to server
       await client.connect();
@@ -125,7 +124,7 @@ class Workflows extends DataService {
   }
 
   async queue(param) {
-    const { key } = param
+    const { key, clientId } = param
 
     let workflow: any = null
     try {
@@ -140,8 +139,6 @@ class Workflows extends DataService {
     let response: any = null;
     try {
       if (workflow.workflowType === 'comfyui') {
-        this.app.ws.sendJsonTo('workflows', { key, status: 'running' })
-        
         const fullPrompt = JSON.parse(JSON.stringify(workflow.prompt.output))
         const prompt = merge(fullPrompt, param.prompt)
 
@@ -153,7 +150,16 @@ class Workflows extends DataService {
           }
         })
 
-        const { outputs } = await getOutputs(prompt)
+        const eventEmitter = (type, data) => {
+          this.app.ws.sendJsonTo('workflows', {
+            clientId,
+            workflowKey: key,
+            type,
+            data
+          })
+        }
+
+        const { outputs } = await getOutputs(clientId, prompt, eventEmitter)
         const { paramsNodes } = workflow
         const outputKeys = paramsNodes.filter(item => item.category === 'output').map(item => item.id.toString())
         response = {}

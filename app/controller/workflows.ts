@@ -71,7 +71,14 @@ export default class WorkflowsController extends Controller {
 
     console.log('client connected');
 
-    ctx.websocket.room.join('workflows');
+    ctx.websocket.room.join('workflows', ({ message }) => {
+      const data = JSON.parse(message.toString());
+      if (data && data.clientId) {
+        // todo
+        return;
+      }
+      ctx.websocket?.send(message);
+    });
 
     ctx.websocket.send("connected");
 
