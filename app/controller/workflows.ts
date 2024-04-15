@@ -48,6 +48,10 @@ export default class WorkflowsController extends Controller {
     const payload = this.ctx.request.body;
     this.ctx.body = await this.service.workflows.queue(payload);
   }
+  async deleteQueue() {
+    const payload = this.ctx.request.body;
+    this.ctx.body = await this.service.workflows.deleteQueue(payload);
+  }
   async update() {
     const { id } = this.ctx.params;
     if (!isValidParam(id)) {

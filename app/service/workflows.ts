@@ -42,6 +42,18 @@ function getQueueState(clientId) {
   return client.getQueue();
 }
 
+function deleteQueue(clientId, promptId) {
+  const client = new ComfyUIClient(comfyuiHost, clientId);
+
+  return client.deleteQueue(promptId);
+}
+
+function interrupt(clientId) {
+  const client = new ComfyUIClient(comfyuiHost, clientId);
+
+  return client.interrupt();
+}
+
 const getOutputs = (
   clientId,
   prompt: Prompt,
@@ -80,6 +92,8 @@ function getSeed(n) {
   }
   return Number(num);
 }
+
+let currentPromptId = null
 
 class Workflows extends DataService {
   getWorkflowById(id: number | string) {
@@ -188,14 +202,44 @@ class Workflows extends DataService {
           }
         })
 
+        const nodes = Object.keys(prompt)
+        const finishedNodes: any = []
+        let progress = 0
+
         const eventEmitter = (type, data) => {
           if (type === 'message') {
+            const message = JSON.parse(data.toString())
+            if (message.type === 'execution_start') {
+              progress = 1
+              currentPromptId = message.data.prompt_id
+            }
+            if (message.type === 'execution_cached') {
+              progress = Math.floor(message.data.nodes.length / nodes.length * 100)
+              finishedNodes.push(...message.data.nodes)
+            }
+            if (message.type === "executing") {
+              if (message.data.node === null) {
+                currentPromptId = null
+                progress = 100
+              }
+              else {
+                if (!finishedNodes.includes(message.data.node)) {
+                  finishedNodes.push(message.data.node)
+                  progress = Math.floor(finishedNodes.length / nodes.length * 100)
+                }
+              }
+            }
+            if (message.type === "progress") {
+              const step = message.data.value / message.data.max * 100 * 1 / nodes.length / message.data.max
+              progress += step
+            }
             this.app.ws.sendJsonTo('workflows', {
               type: 'progress',
               clientId,
               data: {
                 workflowKey: key,
-                message: JSON.parse(data.toString())
+                promptId: currentPromptId,
+                value: progress
               }
             })
           }
@@ -250,9 +294,22 @@ class Workflows extends DataService {
       type: 'done',
       data: {
         workflowKey: key,
+        prompt: param.prompt,
         outputs: response
       }
     })
+
+    return this.ctx.helper.getResponseData(response)
+  }
+
+  async deleteQueue(param) {
+    const { clientId, promptId } = param
+    let response
+    if (promptId === currentPromptId) {
+      response = await interrupt(clientId);
+    } else {
+      response = await deleteQueue(clientId, promptId);
+    }
 
     return this.ctx.helper.getResponseData(response)
   }
