@@ -14,7 +14,6 @@ import { E_Method } from '../lib/enum';
 import { I_CreateWorkflow, I_Response, I_UpdateWorkflow } from '../lib/interface';
 import DataService from './dataService';
 import merge from 'deepmerge-json';
-import { v4 as uuidv4 } from 'uuid';
 
 import { ComfyUIClient } from '@artifyfun/comfy-ui-client';
 import type { Prompt, PromptHistory } from '@artifyfun/comfy-ui-client';
@@ -24,11 +23,9 @@ const comfyuiHost = '127.0.0.1:8188'
 const uploadImage = (
   image: Buffer,
   filename: string,
+  clientId: string,
   overwrite?: boolean,
 ) => {
-  // Create client ID
-  const clientId = uuidv4();
-
   // Create client
   const client = new ComfyUIClient(comfyuiHost, clientId);
 
@@ -37,6 +34,12 @@ const uploadImage = (
     filename,
     overwrite
   );
+}
+
+function getQueueState(clientId) {
+  const client = new ComfyUIClient(comfyuiHost, clientId);
+
+  return client.getQueue();
 }
 
 const getOutputs = (
@@ -120,21 +123,56 @@ class Workflows extends DataService {
   }
 
   uploadImage(param) {
-    return uploadImage(param.image, param.filename, param.overwrite)
+    return uploadImage(param.image, param.filename, param.clientId, param.overwrite)
   }
 
   async queue(param) {
     const { key, clientId } = param
 
+    this.app.ws.sendJsonTo('workflows', {
+      clientId,
+      type: 'running',
+      data: {
+        workflowKey: key,
+      }
+    })
+
+    const emitError = (message) => {
+      this.app.ws.sendJsonTo('workflows', {
+        clientId,
+        type: 'error',
+        data: {
+          workflowKey: key,
+          message
+        }
+      })
+    }
+
+    const emitState = () => {
+      getQueueState(clientId).then((state) => {
+        this.app.ws.sendJsonTo('workflows', {
+          type: 'state',
+          data: {
+            pending: state.queue_pending.length,
+            running: state.queue_running.length,
+          }
+        })
+      })
+    }
+
     let workflow: any = null
     try {
-      const res = await this.find({key})
+      const res = await this.find({ key })
       workflow = res.data?.[0]
     } catch (e: any) {
-      throw new Error(`工作流读取失败: ${(e as Error).message}`);
+      const message = `工作流读取失败: ${(e as Error).message}`
+      emitError(message)
+      throw new Error(message);
     }
     if (!workflow) {
-      throw new Error(`工作流不存在: ${key}`);
+      const message = `工作流不存在: ${key}`
+      emitError(message)
+      throw new Error(message);
     }
     let response: any = null;
     try {
@@ -151,13 +189,24 @@ class Workflows extends DataService {
         })
 
         const eventEmitter = (type, data) => {
-          this.app.ws.sendJsonTo('workflows', {
-            clientId,
-            workflowKey: key,
-            type,
-            data
-          })
+          if (type === 'message') {
+            this.app.ws.sendJsonTo('workflows', {
+              type: 'progress',
+              clientId,
+              data: {
+                workflowKey: key,
+                message: JSON.parse(data.toString())
+              }
+            })
+          }
+          else if (type === 'error') {
+            emitError(data)
+          }
         }
+
+        setTimeout(() => {
+          emitState()
+        }, 1000)
 
         const { outputs } = await getOutputs(clientId, prompt, eventEmitter)
         const { paramsNodes } = workflow
@@ -171,15 +220,40 @@ class Workflows extends DataService {
         })
       }
       else {
-        throw new Error(`工作流类型暂不支持: ${workflow.workflowType}`);
+        const message = `工作流类型暂不支持: ${workflow.workflowType}`
+        emitError(message)
+        throw new Error(message);
       }
     } catch (e: any) {
-      throw new Error(`工作流执行失败: ${(e as Error).message}`);
+      const message = `工作流执行失败: ${(e as Error).message}`
+      emitError(message)
+      throw new Error(message);
     }
 
+    emitState()
+
     if (!response) {
-      throw new Error('工作流执行失败: 返回空数据');
+      const message = '工作流执行失败: 未获取到输出数据'
+      emitError(message)
+      throw new Error(message);
     }
+    // 缓存历史数据
+    const history = this.ctx.service.cache.cache.get(`workflows/history/${clientId}`) || {};
+    history[key] = {
+      prompt: param.prompt,
+      outputs: response
+    }
+    this.ctx.service.cache.set(`workflows/history/${clientId}`, history, 60 * 60 * 24 * 1);
+
+    this.app.ws.sendJsonTo('workflows', {
+      clientId,
+      type: 'done',
+      data: {
+        workflowKey: key,
+        outputs: response
+      }
+    })
+
     return this.ctx.helper.getResponseData(response)
   }
 
