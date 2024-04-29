@@ -32,6 +32,8 @@ export default (app: Application) => {
   // 用户管理
   subRouter.get('/user/list', controller.platformCenter.auth.users);
   subRouter.get('/user/me', controller.platformCenter.auth.me);
+  subRouter.post('/user/login', controller.platformCenter.auth.login);
+  subRouter.post('/user/register', controller.platformCenter.auth.register);
 
 };
 

@@ -97,6 +97,10 @@ class DataService extends Service {
     data = type === 'dataCenter' ? result.data : result.data.data;
     /* istanbul ignore if */
     if (result.status !== 200) {
+      if (data?.statusCode === 400) {
+        this.app.logger.warn('数据中心鉴权失败: ', data?.message);
+        throwApiError(data?.message.map(item => item.messages.map(msg => msg.message).join(',')).join(','), 200, E_ErrorCode.BadRequest, data);
+      }
       throwApiError(`${data?.message || '请求失败'}`, 200, result.status.toString(), data);
     }
     return this.ctx.helper.getResponseData(data);

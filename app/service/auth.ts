@@ -11,28 +11,46 @@
 */
 import * as qs from 'qs';
 import { I_Response } from '../lib/interface';
+import { E_Method } from '../lib/enum';
 import DataServcice from './dataService';
 
 class Auth extends DataServcice {
  
-  private base = 'auth-users-units-roles';
- 
-
- 
-
   // 查询用户列表
   users(param): Promise<I_Response> {
-    const url = `${this.base}/users?${qs.stringify(param)}`;
+    const url = `users?${qs.stringify(param)}`;
     return this.query({
       url
     });
   }
 
-
   // 查询当前角色信息
   async me(): Promise<I_Response> {
     const userInfo = await this.query({
-      url: `${this.base}/me`
+      url: `users/me`,
+      option: {
+        headers: {
+          // Authorization: `Bearer ${cookies.jwt}`,
+        }
+      }
+    });
+    return userInfo;
+  }
+
+  async login(param): Promise<I_Response> {
+    const userInfo = await this.query({
+      url: `auth/local`,
+      method: E_Method.Post,
+      data: param
+    });
+    return userInfo;
+  }
+
+  async register(param): Promise<I_Response> {
+    const userInfo = await this.query({
+      url: `auth/local/register`,
+      method: E_Method.Post,
+      data: param
     });
     return userInfo;
   }

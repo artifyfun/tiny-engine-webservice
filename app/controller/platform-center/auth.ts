@@ -10,14 +10,31 @@
 *
 */
 import { Controller } from 'egg';
-const fs = require('fs-extra')
-const path = require('path')
+// const fs = require('fs-extra')
+// const path = require('path')
 
 export default class AuthController extends Controller {
+
+  async login() {
+    const { body } = this.ctx.request;
+    const { auth } = this.ctx.service;
+    const data = await auth.login(body);
+    this.ctx.body = data;
+  }
+  
+
+  async register() {
+    const { body } = this.ctx.request;
+    const { auth } = this.ctx.service;
+    const data = await auth.register(body);
+    this.ctx.body = data;
+  }
   
 
   async me() {
-    const user = fs.readFileSync(path.join(__dirname, './defaultUser.json'), 'utf8')
+    // const user = fs.readFileSync(path.join(__dirname, './defaultUser.json'), 'utf8')
+    const { auth } = this.ctx.service;
+    const user = await auth.me();
     this.ctx.body = user;
   }
 
