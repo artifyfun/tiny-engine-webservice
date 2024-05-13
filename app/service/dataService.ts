@@ -22,7 +22,7 @@ const defaultOption: RequestOptions2 = {
   timeout: 100 * 1000
 };
 
-const SESSION_KEY = 'TINY_BUILDER_SESS';
+export const SESSION_KEY = 'TINY_BUILDER_SESS';
 const X_USER = 'x-tinybuilder-user';
 const X_ORG = 'x-tinybuilder-tenant';
 const X_ROLE = 'x-tinybuilder-role';
@@ -63,13 +63,15 @@ class DataService extends Service {
         curlOption.headers[X_USER] = 'backend';
       } else {
         curlOption.headers.cookie = this.ctx.request.headers.cookie;
+        curlOption.headers.Authorization = `Bearer ${this.ctx.cookies.get(SESSION_KEY)}`;
       }
     }
 
     // 添加request_id
     curlOption.headers.request_id = header.request_id;
     // 设置租户信息（任何权限用户均必须设置一个租户信息已确保操作数据的合法性）
-    curlOption.headers[X_ORG] = header['x-lowcode-org'];
+    // curlOption.headers[X_ORG] = header['x-lowcode-org'];
+    curlOption.headers[X_ORG] = '1';
     const api = `${host}/${url}`;
     return await this.catchRequest(api, curlOption, type);
   }
@@ -174,7 +176,7 @@ class DataService extends Service {
     }
 
   private verifyCookie(): boolean {
-    const sessionKey = this.ctx.cookies.get('TINY_BUILDER_SESS');
+    const sessionKey = this.ctx.cookies.get(SESSION_KEY);
     if (!sessionKey) {
       const w3Key = this.ctx.cookies.get('hwsso_am', {
         signed: false

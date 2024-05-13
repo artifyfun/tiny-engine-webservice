@@ -19,7 +19,7 @@ export interface I_CreateAppParam {
   id?: number;
   name: string;
   description?: string;
-  platform: number;
+  platform: string;
   image_url: string;
   action?: E_CreateAppAction
 }

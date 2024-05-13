@@ -21,6 +21,7 @@ export default (app: Application) => {
   router.get('/entry/preview', controller.home.preview);
   router.get('/entry/previewApp', controller.home.previewApp);
   router.get('/artifyfun', controller.home.artifyfun);
+  router.get('/artifyfun/*', controller.home.artifyfun);
 
   app.ws.route('/workflows', app.controller.workflows.state);
 };

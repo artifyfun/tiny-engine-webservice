@@ -12,7 +12,7 @@
 import * as qs from 'qs';
 import { I_Response } from '../lib/interface';
 import { E_Method } from '../lib/enum';
-import DataServcice from './dataService';
+import DataServcice, { SESSION_KEY } from './dataService';
 
 class Auth extends DataServcice {
  
@@ -28,13 +28,8 @@ class Auth extends DataServcice {
   async me(): Promise<I_Response> {
     const userInfo = await this.query({
       url: `users/me`,
-      option: {
-        headers: {
-          // Authorization: `Bearer ${cookies.jwt}`,
-        }
-      }
     });
-    return userInfo;
+    return this.ctx.helper.getUserInfo(userInfo);
   }
 
   async login(param): Promise<I_Response> {
@@ -42,8 +37,15 @@ class Auth extends DataServcice {
       url: `auth/local`,
       method: E_Method.Post,
       data: param
-    });
-    return userInfo;
+    }, false);
+    if (userInfo.data?.jwt) {
+      this.ctx.cookies.set(SESSION_KEY, userInfo.data.jwt, {
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        overwrite: true,
+      });
+    }
+    return this.ctx.helper.getUserInfo(userInfo);
   }
 
   async register(param): Promise<I_Response> {
@@ -51,8 +53,8 @@ class Auth extends DataServcice {
       url: `auth/local/register`,
       method: E_Method.Post,
       data: param
-    });
-    return userInfo;
+    }, false);
+    return this.ctx.helper.getUserInfo(userInfo);
   }
 
 }

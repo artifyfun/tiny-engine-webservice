@@ -12,7 +12,7 @@
 export const createAppRule = {
   name: 'string',
   description: 'string?',
-  platform: 'int',
+  platform: 'string',
   image_url: {
     type: 'url',
     required: false,

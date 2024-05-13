@@ -272,4 +272,36 @@ module.exports = {
     }
   },
 
+  getUserInfo(userInfo) {
+    return {
+      ...userInfo,
+      "tenant": {
+        "id": "1"
+      },
+      role: {
+        id: 1,
+        name: 'Authenticated',
+        description: 'Default role given to authenticated user.',
+        type: 'authenticated',
+        created_by: null,
+        updated_by: null
+      },
+      "tenants": [
+        {
+          "id": 1,
+          "tenant_id": "public",
+          "name_cn": "公共租户",
+          "name_en": "Public Tenant",
+          "description": "Default tenant for new user to explore.",
+          "created_by": null,
+          "updated_by": null,
+          "created_at": "2021-12-28T11:39:10.000Z",
+          "updated_at": "2023-02-09T08:23:00.000Z",
+          "createdBy": null,
+          "updatedBy": 86
+        }
+      ],
+    }
+  }
+
 };

@@ -12,13 +12,36 @@
 import * as qs from 'querystring';
 import { E_Method, E_i18Belongs, E_I18nLangs } from '../../lib/enum';
 import { I_AppComplexInfo, I_Response } from '../../lib/interface';
-import { I_UpdateAppParam } from '../../interface/app-center/app';
+import { I_UpdateAppParam, I_CreateAppParam } from '../../interface/app-center/app';
 import DataService from '../dataService';
 class Apps extends DataService {
+  async getAppList() {
+    const res = await this.find({ filter_type: 'mine' });
+    if (res.data) {
+      res.data = res.data.map(item => this.convertRes(item));
+    }
+    return res;
+  }
+
   async getAppById(id: number | string) {
     
     const  res = await this.findOne({ id });
     
+    if (res.data) {
+      res.data = this.convertRes(res.data);
+    }
+    return res;
+  }
+
+  async createApp(param: I_CreateAppParam) {
+    const res = await this.query({
+      url: `apps`,
+      method: E_Method.Post,
+      data: {
+        ...param,
+        tenant: 1
+      }
+    });
     if (res.data) {
       res.data = this.convertRes(res.data);
     }
@@ -46,6 +69,12 @@ class Apps extends DataService {
     return res;
   }
 
+  async delete(param: any) {
+    return this.query({
+      url: `apps/${param.id}`,
+      method: E_Method.Delete
+    });
+  }
 
   async getI18n(appId: string | number): Promise<I_Response> {
     const { i18nEntries, materials } = this.ctx.service.appCenter;
@@ -88,6 +117,10 @@ class Apps extends DataService {
 
   async findOne(param: any) {
     return this.query({ url: `apps/${param.id}` });
+  }
+
+  async find(param: any) {
+    return this.query({ url: `apps`, data: param });
   }
 
   // 画布锁

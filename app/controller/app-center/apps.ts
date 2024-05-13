@@ -12,7 +12,7 @@
 import { Controller } from 'egg';
 import { I_Response } from '../../lib/interface';
 import { E_CanvasEditorState, E_ErrorCode,  } from '../../lib/enum';
-import { publishAppRule, updateAppRule } from '../../validate/app-center/app';
+import { publishAppRule, updateAppRule, createAppRule } from '../../validate/app-center/app';
 
 const i18nRule = {
   id: {
@@ -25,6 +25,10 @@ const i18nRule = {
  */
 class AppsController extends Controller {
 
+  async appList() {
+    this.ctx.body = await this.service.appCenter.apps.getAppList();
+  }
+
   /**
    * @router get /api/apps/detail/:id  路径
    * @summary 应用信息
@@ -35,6 +39,27 @@ class AppsController extends Controller {
     this.ctx.validate({ id: 'id' }, { id });
     const { apps } = this.ctx.service.appCenter;
     this.ctx.body = await apps.getAppById(id);
+  }
+
+  /**
+   * @router get /api/apps/create  路径
+   * @summary 创建应用
+   * @description 创建应用
+   */
+  async create() {
+    const { body } = this.ctx.request;
+    const createParam = this.ctx.helper.pickObject({
+      ...body,
+      platform: '1',
+    }, [
+      'name',
+      'platform',
+      'image_url',
+      'action',
+    ], true)
+    const { apps } = this.ctx.service.appCenter;
+    this.ctx.validate(createAppRule, createParam);
+    this.ctx.body = await apps.createApp(createParam);
   }
 
   /**
@@ -60,6 +85,12 @@ class AppsController extends Controller {
     const { apps } = this.ctx.service.appCenter;
     this.ctx.validate(updateAppRule, updateParam);
     this.ctx.body = await apps.updateApp(updateParam);
+  }
+
+  async deleteAppById() {
+    const { id } = this.ctx.params;
+    this.ctx.validate({ id: 'id' }, { id });
+    this.ctx.body = await this.service.appCenter.apps.delete({ id });
   }
 
 
