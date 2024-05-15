@@ -10,6 +10,7 @@
 *
 */
 import * as qs from 'querystring';
+import crypto from 'crypto'
 import { E_Method, E_i18Belongs, E_I18nLangs } from '../../lib/enum';
 import { I_AppComplexInfo, I_Response } from '../../lib/interface';
 import { I_UpdateAppParam, I_CreateAppParam } from '../../interface/app-center/app';
@@ -229,11 +230,18 @@ class Apps extends DataService {
     // 回填应用 data_hash数据会更新应用的update_at字段，需要删除 应用schema中的更新时间的字段 gmt_modified
     const schemaCopy = JSON.parse(JSON.stringify(schema));
     delete schemaCopy?.meta?.gmt_modified;
-    const hash = this.service.convertMD5Value.getHexHash({
+    const md5 = crypto.createHash('md5');
+    md5.update(JSON.stringify({
       schema: schemaCopy,
       extendIds,
       appExtendConfig
-    });
+    }));
+    const hash = md5.digest('hex');
+    // const hash = this.service.convertMD5Value.getHexHash({
+    //   schema: schemaCopy,
+    //   extendIds,
+    //   appExtendConfig
+    // });
     const { data_hash } = detail;
     const isChanged = hash !== data_hash;
     this.logger.info(`ID: ${appId} 应用关键数据hash, 新(${hash})旧(${data_hash})是否不同:`, isChanged);
