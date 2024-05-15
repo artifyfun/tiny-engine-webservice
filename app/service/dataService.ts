@@ -23,11 +23,12 @@ const defaultOption: RequestOptions2 = {
 };
 
 export const SESSION_KEY = 'TINY_BUILDER_SESS';
-const X_USER = 'x-tinybuilder-user';
+// const X_USER = 'x-tinybuilder-user';
 const X_ORG = 'x-tinybuilder-tenant';
-const X_ROLE = 'x-tinybuilder-role';
+// const X_ROLE = 'x-tinybuilder-role';
+export const TOKEN_KEY = 'x-artifyfun-token';
 
-const roles: Array<string> = ['master', 'admin', 'tenantAdmin', 'platformAdmin', 'appAdmin', 'appDev', 'guest'];
+// const roles: Array<string> = ['master', 'admin', 'tenantAdmin', 'platformAdmin', 'appAdmin', 'appDev', 'guest'];
 
 class DataService extends Service {
   protected paramKeys: Array<string | I_FieldItem> = [];
@@ -47,24 +48,28 @@ class DataService extends Service {
 
     // 添加cookie
     curlOption.headers = curlOption.headers || {};
-    if (this.ctx.state.authMode === 'accessKey') {
-      curlOption.headers.cookie = this.ctx.state.injectedCookie;
-    } else {
-      // x-lowcode-user 请求头 对于白名单 及 开发者模式分别为 whitelist 及 develop
-      const emptyUser = header['x-lowcode-user'];
-      if (emptyUser) {
-        curlOption.headers[X_USER] = emptyUser;
-        if (emptyUser === 'develop') {
-          const role = header['x-lowcode-role'] || 'master';
-          this.setDevelopCookie(curlOption, role as string);
-        }
-      } else if (!this.verifyCookie() || !authRequired) {
-        // 此种情况经过中间件约束只出现在定时任务、队列任务请求上
-        curlOption.headers[X_USER] = 'backend';
-      } else {
-        curlOption.headers.cookie = this.ctx.request.headers.cookie;
-        curlOption.headers.Authorization = `Bearer ${this.ctx.cookies.get(SESSION_KEY)}`;
-      }
+    // if (this.ctx.state.authMode === 'accessKey') {
+    //   curlOption.headers.cookie = this.ctx.state.injectedCookie;
+    // } else {
+    //   // x-lowcode-user 请求头 对于白名单 及 开发者模式分别为 whitelist 及 develop
+    //   const emptyUser = header['x-lowcode-user'];
+    //   if (emptyUser) {
+    //     curlOption.headers[X_USER] = emptyUser;
+    //     if (emptyUser === 'develop') {
+    //       const role = header['x-lowcode-role'] || 'master';
+    //       this.setDevelopCookie(curlOption, role as string);
+    //     }
+    //   } else if (!this.verifyCookie() || !authRequired) {
+    //     // 此种情况经过中间件约束只出现在定时任务、队列任务请求上
+    //     curlOption.headers[X_USER] = 'backend';
+    //   } else {
+    //     // curlOption.headers.cookie = this.ctx.request.headers.cookie;
+    //     curlOption.headers.Authorization = `Bearer ${header[TOKEN_KEY]}`;
+    //     console.log('curlOption.headers.Authorization', curlOption.headers.Authorization)
+    //   }
+    // }
+    if (authRequired) {
+      curlOption.headers.Authorization = `Bearer ${header[TOKEN_KEY]}`;
     }
 
     // 添加request_id
@@ -175,34 +180,34 @@ class DataService extends Service {
       return res;
     }
 
-  private verifyCookie(): boolean {
-    const sessionKey = this.ctx.cookies.get(SESSION_KEY);
-    if (!sessionKey) {
-      const w3Key = this.ctx.cookies.get('hwsso_am', {
-        signed: false
-      });
-      return !!w3Key;
-    }
-    return true;
-  }
+  // private verifyCookie(): boolean {
+  //   const sessionKey = this.ctx.cookies.get(SESSION_KEY);
+  //   if (!sessionKey) {
+  //     const w3Key = this.ctx.cookies.get('hwsso_am', {
+  //       signed: false
+  //     });
+  //     return !!w3Key;
+  //   }
+  //   return true;
+  // }
 
-  private setDevelopCookie(curlOption, role: string) {
-    if (!roles.includes(role)) {
-      role = 'master';
-    }
-    curlOption.headers[X_ROLE] = role;
-    const sessionValue = `tiny-builder-developer-${role}`;
-    const currentValue = this.ctx.cookies.get(SESSION_KEY);
-    if (sessionValue !== currentValue) {
-      this.ctx.cookies.set(SESSION_KEY, sessionValue, {
-        signed: true
-      });
-      const setCookie: Array<string> = this.ctx.response.headers['set-cookie'] as Array<string>;
-      curlOption.headers.cookie = setCookie.join(';');
-    } else {
-      curlOption.headers.cookie = this.ctx.request.headers.cookie;
-    }
-  }
+  // private setDevelopCookie(curlOption, role: string) {
+  //   if (!roles.includes(role)) {
+  //     role = 'master';
+  //   }
+  //   curlOption.headers[X_ROLE] = role;
+  //   const sessionValue = `tiny-builder-developer-${role}`;
+  //   const currentValue = this.ctx.cookies.get(SESSION_KEY);
+  //   if (sessionValue !== currentValue) {
+  //     this.ctx.cookies.set(SESSION_KEY, sessionValue, {
+  //       signed: true
+  //     });
+  //     const setCookie: Array<string> = this.ctx.response.headers['set-cookie'] as Array<string>;
+  //     curlOption.headers.cookie = setCookie.join(';');
+  //   } else {
+  //     curlOption.headers.cookie = this.ctx.request.headers.cookie;
+  //   }
+  // }
 
   _count(baseUrl = 'platforms', param) {
     const query = typeof param === 'string' ? param : qs.stringify(param);

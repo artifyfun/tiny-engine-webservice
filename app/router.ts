@@ -16,10 +16,11 @@ export default (app: Application) => {
   //健康检查
   router.get('/healthCheck', controller.home.healthCheck);
 
-  router.get('/entry', controller.home.index);
-  router.get('/entry/canvas', controller.home.canvas);
-  router.get('/entry/preview', controller.home.preview);
-  router.get('/entry/previewApp', controller.home.previewApp);
+  router.get('/', controller.home.artifyfun);
+  router.get('/design', controller.home.index);
+  router.get('/design/canvas', controller.home.canvas);
+  router.get('/design/preview', controller.home.preview);
+  router.get('/design/previewApp', controller.home.previewApp);
   router.get('/artifyfun', controller.home.artifyfun);
   router.get('/artifyfun/*', controller.home.artifyfun);
 
