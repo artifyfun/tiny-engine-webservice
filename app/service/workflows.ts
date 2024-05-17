@@ -127,7 +127,7 @@ class Workflows extends DataService {
 
   find(param) {
     const query = typeof param === 'string' ? param : qs.stringify(param);
-    return this.query({ url: `workflows?${query}` });
+    return this.query({ url: `workflows?${query}` }, false);
   }
 
   async view(querystring) {

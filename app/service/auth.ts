@@ -12,7 +12,7 @@
 import * as qs from 'qs';
 import { I_Response } from '../lib/interface';
 import { E_Method } from '../lib/enum';
-import DataServcice, { SESSION_KEY } from './dataService';
+import DataServcice from './dataService';
 
 class Auth extends DataServcice {
  
@@ -38,13 +38,6 @@ class Auth extends DataServcice {
       method: E_Method.Post,
       data: param
     }, false);
-    if (userInfo.data?.jwt) {
-      this.ctx.cookies.set(SESSION_KEY, userInfo.data.jwt, {
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-        overwrite: true,
-      });
-    }
     return this.ctx.helper.getUserInfo(userInfo);
   }
 
