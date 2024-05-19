@@ -28,6 +28,7 @@ export default (appInfo) => {
   // add your egg config in here
   config.middleware = [
     // 'httpProxy',
+    'multipart',
     'errorResponse',
     'beforRequest'
   ];

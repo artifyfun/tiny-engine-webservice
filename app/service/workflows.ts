@@ -14,6 +14,8 @@ import { E_Method } from '../lib/enum';
 import { I_CreateWorkflow, I_Response, I_UpdateWorkflow } from '../lib/interface';
 import DataService from './dataService';
 import merge from 'deepmerge-json';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs'
 
 import { ComfyUIClient } from '@artifyfun/comfy-ui-client';
 import type { Prompt, PromptHistory } from '@artifyfun/comfy-ui-client';
@@ -136,8 +138,15 @@ class Workflows extends DataService {
     })
   }
 
-  uploadImage(param) {
-    return uploadImage(param.image, param.filename, param.clientId, param.overwrite)
+  async uploadImage(file) {
+    const clientId = uuidv4()
+    const image = fs.readFileSync(file.filepath)
+    const res = await uploadImage(image, file.filename, clientId, false)
+    const url = `/workflows/api/view?filename=${res.name}&${res.subfolder}&type=input`
+    return {
+      ...res,
+      url
+    }
   }
 
   async queue(param) {

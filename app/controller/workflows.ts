@@ -42,7 +42,7 @@ export default class WorkflowsController extends Controller {
   }
   async uploadImage() {
     const files = this.ctx.request.files
-    this.ctx.body = await this.service.workflows.uploadImage(files);
+    this.ctx.body = await this.service.workflows.uploadImage(files[0]);
   }
   async queue() {
     const payload = this.ctx.request.body;
