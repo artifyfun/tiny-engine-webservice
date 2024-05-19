@@ -33,6 +33,10 @@ export default (appInfo) => {
     'beforRequest'
   ];
 
+  config.multipart = {
+    fileSize: '50mb',
+  };
+
   // const comfyuiOrigin = 'http://127.0.0.1:8188'
 
   // config.httpProxy = {
