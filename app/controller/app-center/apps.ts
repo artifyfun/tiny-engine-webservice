@@ -53,6 +53,7 @@ class AppsController extends Controller {
       platform: '1',
     }, [
       'name',
+      'description',
       'platform',
       'image_url',
       'action',
