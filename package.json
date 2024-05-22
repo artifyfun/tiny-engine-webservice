@@ -46,7 +46,7 @@
   "dependencies": {
     "@artifyfun/comfy-ui-client": "^0.2.1",
     "@opentiny/tiny-engine-block-build": "^0.0.1-alpha.0",
-    "@opentiny/tiny-engine-dsl-vue": "~1.0.1",
+    "@opentiny/tiny-engine-dsl-vue": "1.0.3",
     "@opentiny/tiny-engine-transform": "^1.0.0-alpha.1",
     "@types/node-cache": "^4.2.5",
     "compressing": "^1.7.0",

@@ -21,6 +21,7 @@ export default (app: Application) => {
   router.get('/design/canvas', controller.home.canvas);
   router.get('/design/preview', controller.home.preview);
   router.get('/design/previewApp', controller.home.previewApp);
+  router.get('/design/downloadApp', controller.home.downloadApp);
   router.get('/artifyfun', controller.home.artifyfun);
   router.get('/artifyfun/*', controller.home.artifyfun);
 

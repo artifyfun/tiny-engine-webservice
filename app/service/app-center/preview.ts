@@ -81,7 +81,7 @@ class AppPreview extends DataServcice {
     const progressMsg = `MQ: publish preview task ${publishBool ? 'success' : 'failed'}`;
     task.update({
       id: taskId,
-      taskStatus: publishBool ? E_TASK_STATUS.RUNNING : E_TASK_STATUS.STOPPED,
+      taskStatus: publishBool ? E_TASK_STATUS.FINISHED : E_TASK_STATUS.STOPPED,
       progress: progressMsg
     });
     logger.info(progressMsg);
@@ -168,13 +168,10 @@ class AppPreview extends DataServcice {
 
       await generate.zipPackage();
       const { generatePath, codeFolder } = generate;
-      console.log('gen--------------------------------------------------', generatePath, codeFolder)
-      // const { success } = await obs.upload({
-      //   Key: `${subFolder}/${codeFolder}.zip`,
-      //   SourceFile: `${generatePath}.zip`
-      // });
+      
+      // 保存在本地
       const distPath = `${generatePath}.zip`;
-      const serverPath = `../app/public/apps/${codeFolder}.zip`;
+      const serverPath = `./app/public/apps/${codeFolder}.zip`;
       try {
         fs.rmSync(serverPath, { recursive: true })
       } catch (e) {
@@ -183,7 +180,7 @@ class AppPreview extends DataServcice {
 
       fs.cpSync(distPath, serverPath, { recursive: true })
       
-      const assetsUrl = serverPath;
+      const assetsUrl = `/apps/${codeFolder}.zip`
       // 回填数据到应用表
       await apps.updateApp({
         id: appId,
