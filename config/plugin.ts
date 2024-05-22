@@ -19,7 +19,7 @@ const plugin: EggPlugin = {
   },
   // 用于连接rocketmq 使用时请按需打开
   amqplib: {
-    enable: false,
+    enable: true,
     package: 'egg-amqplib'
   },
   ejs: {

@@ -13,6 +13,7 @@ import { E_ErrorCode, E_TASK_STATUS, E_TASK_TYPE } from '../../lib/enum';
 import { I_AppComplexInfo, I_Response } from '../../lib/interface';
 import MqClass from '../../lib/MqClass';
 import DataServcice from '../dataService';
+import fs from 'fs-extra';
 
 class AppPreview extends DataServcice {
   async start(appId: string | number): Promise<I_Response> {
@@ -60,7 +61,10 @@ class AppPreview extends DataServcice {
     let appCodeUrl = '';
     try {
       // 应用出码并上传代码zip包到obs
-      appCodeUrl = await this.generateAndUpload(appComplexInfo);
+      // appCodeUrl = await this.generateAndUpload(appComplexInfo);
+
+      // 由于目前只是预览，暂时不上传代码zip包到obs
+      appCodeUrl = await this.generatePreview(appComplexInfo);
     } catch (error) {
       const message = (error as Error)?.message || error;
       task.update({ id: taskId, taskStatus: E_TASK_STATUS.STOPPED, result: message });
@@ -129,6 +133,57 @@ class AppPreview extends DataServcice {
         throw new Error(message);
       }
       const assetsUrl = `${url}/${subFolder}/${codeFolder}.zip`;
+      // 回填数据到应用表
+      await apps.updateApp({
+        id: appId,
+        assets_url: assetsUrl
+      });
+      return assetsUrl;
+    } finally {
+      // 无论是否成功，都清理本次生成代码的目录、压缩包
+      generate.clean();
+    }
+  }
+
+  public async generatePreview(app: string | number | I_AppComplexInfo) {
+    // const { url, subFolder } = this.app.config.obs;
+    const { generate, apps } = this.ctx.service.appCenter;
+    // const { obs } = this.ctx.service;
+    let appComplexInfo: I_AppComplexInfo;
+    if (typeof app === 'number' || typeof app === 'string') {
+      appComplexInfo = await apps.calculateHashValue(app);
+    } else {
+      appComplexInfo = app;
+    }
+    const { id, assets_url } = appComplexInfo.appInfo;
+    if (!appComplexInfo.isChanged && assets_url) {
+      return assets_url;
+    }
+
+    const appId = id;
+    try {
+      await generate.init(appComplexInfo);
+      await generate.copyTemplate();
+      await generate.generateCode();
+
+      await generate.zipPackage();
+      const { generatePath, codeFolder } = generate;
+      console.log('gen--------------------------------------------------', generatePath, codeFolder)
+      // const { success } = await obs.upload({
+      //   Key: `${subFolder}/${codeFolder}.zip`,
+      //   SourceFile: `${generatePath}.zip`
+      // });
+      const distPath = `${generatePath}.zip`;
+      const serverPath = `../app/public/apps/${codeFolder}.zip`;
+      try {
+        fs.rmSync(serverPath, { recursive: true })
+      } catch (e) {
+        console.log('No such directory: ' + serverPath + ', skip it.')
+      }
+
+      fs.cpSync(distPath, serverPath, { recursive: true })
+      
+      const assetsUrl = serverPath;
       // 回填数据到应用表
       await apps.updateApp({
         id: appId,

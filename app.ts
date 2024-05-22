@@ -9,11 +9,11 @@
 * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
 *
 */
-// import MqClass from "./app/lib/MqClass";
+import MqClass from "./app/lib/MqClass";
 import addValidate from './app/validate/common';
 export default class AppBootHook {
   private app;
-  // private queueTypes = ['block', 'material', 'app', 'platform'];
+  private queueTypes = ['block', 'material', 'app', 'platform'];
   constructor(app) {
     this.app = app;
     this.app.logger.info('start to init app');
@@ -41,8 +41,8 @@ export default class AppBootHook {
 
   // worker 准备就绪
   async didReady() {
-    // const mqClient = MqClass.getInstance(this.app);
-    // await mqClient.initPublisher(this.queueTypes);
+    const mqClient = MqClass.getInstance(this.app);
+    await mqClient.initPublisher(this.queueTypes);
     this.app.logger.info('didReady');
   }
 

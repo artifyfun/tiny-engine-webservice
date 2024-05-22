@@ -152,7 +152,7 @@ export default (appInfo) => {
       prefetchCount: 1,
       expiration: 3600000,
       connectOptions: {
-        protocol: 'amqps',
+        protocol: 'amqp',
         hostname: process.env.MQ_IP,
         port: parseInt(process.env.MQ_PORT || '5671', 10),
         username: process.env.MQ_USERNAME, // 使用时替换为自己的mq用户名
@@ -160,7 +160,7 @@ export default (appInfo) => {
         locale: 'en_US',
         frameMax: 0,
         heartbeat: 0,
-        vhost: '/tinyEngine'
+        vhost: '/'
       },
       // other plugin config for more safe to the client if you have
       socketOptions: {
