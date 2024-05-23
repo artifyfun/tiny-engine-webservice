@@ -27,7 +27,7 @@ export default (appInfo) => {
 
   // add your egg config in here
   config.middleware = [
-    // 'httpProxy',
+    'httpProxy',
     'multipart',
     'errorResponse',
     'beforRequest'
@@ -37,16 +37,16 @@ export default (appInfo) => {
     fileSize: '50mb',
   };
 
-  // const comfyuiOrigin = 'http://127.0.0.1:8188'
+  const comfyuiOrigin = 'http://127.0.0.1:8188'
 
-  // config.httpProxy = {
-  //   '/comfyui': {
-  //     target: comfyuiOrigin,
-  //     changeOrigin: true,
-  //     ws: true,
-  //     pathRewrite: { '^/comfyui': '' },
-  //   },
-  // }
+  config.httpProxy = {
+    '/comfyui': {
+      target: comfyuiOrigin,
+      changeOrigin: true,
+      ws: true,
+      pathRewrite: { '^/comfyui': '' },
+    },
+  }
 
   config.redis = {
     client: {

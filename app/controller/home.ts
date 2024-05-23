@@ -41,4 +41,7 @@ export default class HomeController extends Controller {
   public async artifyfun() {
     await this.ctx.render('artifyfun')
   }
+  public async comfyui() {
+    await this.ctx.render('comfyui')
+  }
 }
