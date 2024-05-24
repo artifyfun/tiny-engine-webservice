@@ -51,6 +51,10 @@ const plugin: EggPlugin = {
   websocket: {
     enable: true,
     package: 'egg-websocket-plugin',
+  },
+  httpProxy: {
+    enable: true,
+    package: '@eggjs/http-proxy',
   }
 };
 

@@ -25,6 +25,7 @@ export default (app: Application) => {
   router.get('/artifyfun', controller.home.artifyfun);
   router.get('/artifyfun/*', controller.home.artifyfun);
   router.get('/comfyui', controller.home.comfyui);
+  router.get('/comfyui/*', controller.home.comfyui);
 
   app.ws.route('/workflows', app.controller.workflows.state);
 };

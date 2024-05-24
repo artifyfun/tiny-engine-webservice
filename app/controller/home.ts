@@ -42,6 +42,21 @@ export default class HomeController extends Controller {
     await this.ctx.render('artifyfun')
   }
   public async comfyui() {
-    await this.ctx.render('comfyui')
+    // await this.ctx.render('comfyui')
+    const url = '127.0.0.1:8188'
+    await this.ctx.proxyRequest(url, {
+      rewrite(urlObj) {
+        urlObj.pathname = urlObj.pathname.replace('/comfyui', '');
+        return urlObj;
+      },
+      streaming: false,
+      async beforeResponse(proxyResult) {
+        if (proxyResult.res.requestUrls[0].endsWith('.js')) {
+          return proxyResult;
+        }
+        proxyResult.data = Buffer.from(proxyResult.data.toString().replaceAll('./', '/comfyui/'))
+        return proxyResult;
+      },
+    });
   }
 }
