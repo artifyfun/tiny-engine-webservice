@@ -12,6 +12,8 @@
 import { Controller } from 'egg';
 import { E_ErrorCode } from '../lib/enum';
 import { ComfyUIClient } from '@artifyfun/comfy-ui-client';
+import fs from 'fs-extra'
+import path from 'path'
 
 const comfyuiHost = '127.0.0.1:8188'
 
@@ -27,6 +29,42 @@ const isValidParam = (id) => /^\d+$/.test(id);
  * @controller WorkflowsController
  */
 export default class WorkflowsController extends Controller {
+  public async comfyui() {
+    // await this.ctx.render('comfyui')
+    const pathName = '/comfyui'
+    const url = this.ctx.query.comfyui_url || 'http://127.0.0.1:8188'
+    const uri = new URL(url)
+    if (this.ctx.request.url === '/comfyui/scripts/api.js') {
+      const data = fs.readFileSync(path.join(__dirname, '../lib/comfyui-assets/api.js'), 'utf-8')
+      this.ctx.set('Content-Type', 'application/javascript')
+      this.ctx.body = data.replaceAll('comfyui-host', uri.host)
+      return
+    }
+    await this.ctx.proxyRequest(uri.host, {
+      rewrite(urlObj) {
+        urlObj.pathname = urlObj.pathname.replace(pathName, '');
+        return urlObj;
+      },
+      streaming: false,
+      async beforeResponse(proxyResult) {
+        const requestUrl = proxyResult.res.requestUrls[0];
+        const isJsFile = requestUrl.endsWith('.js');
+        if (isJsFile) {
+          return proxyResult;
+        }
+        if (this.ctx.request.path === '/comfyui') {
+          const data = proxyResult.data.toString().replaceAll('./', `${pathName}/`)
+          this.ctx.set('Content-Type', 'text/html')
+          return {
+            ...proxyResult,
+            data
+          }
+        }
+        return proxyResult;
+      },
+    });
+  }
+
   async find() {
     const queries = this.ctx.queries;
     this.ctx.body = await this.service.workflows.find(queries);
