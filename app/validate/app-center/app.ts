@@ -14,6 +14,7 @@ export const createAppRule = {
   description: 'string?',
   platform: 'string',
   action: 'string?',
+  comfyui_url: 'string?',
   image_url: {
     type: 'url',
     required: false,
@@ -31,6 +32,7 @@ export const updateAppRule = {
   name: 'string?',
   description: 'string?',
   git_group: 'string?',
+  comfyui_url: 'string?',
   // git 仓库地址
   project_name: {
     type: 'url',

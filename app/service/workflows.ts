@@ -20,16 +20,17 @@ import fs from 'fs'
 import { ComfyUIClient } from '@artifyfun/comfy-ui-client';
 import type { Prompt, PromptHistory } from '@artifyfun/comfy-ui-client';
 
-const comfyuiHost = '127.0.0.1:8188'
+const defaultComfyuiUrl = new URL('http://127.0.0.1:8188')
 
 const uploadImage = (
+  host: string,
   image: Buffer,
   filename: string,
   clientId: string,
   overwrite?: boolean,
 ) => {
   // Create client
-  const client = new ComfyUIClient(comfyuiHost, clientId);
+  const client = new ComfyUIClient(host, clientId);
 
   return client.uploadImage(
     image,
@@ -38,25 +39,26 @@ const uploadImage = (
   );
 }
 
-function getQueueState(clientId) {
-  const client = new ComfyUIClient(comfyuiHost, clientId);
+function getQueueState(host, clientId) {
+  const client = new ComfyUIClient(host, clientId);
 
   return client.getQueue();
 }
 
-function deleteQueue(clientId, promptId) {
-  const client = new ComfyUIClient(comfyuiHost, clientId);
+function deleteQueue(host, clientId, promptId) {
+  const client = new ComfyUIClient(host, clientId);
 
   return client.deleteQueue(promptId);
 }
 
-function interrupt(clientId) {
-  const client = new ComfyUIClient(comfyuiHost, clientId);
+function interrupt(host, clientId) {
+  const client = new ComfyUIClient(host, clientId);
 
   return client.interrupt();
 }
 
 const getOutputs = (
+  host,
   clientId,
   prompt: Prompt,
   eventEmitter?: (type: string, data: any) => void
@@ -64,7 +66,7 @@ const getOutputs = (
   return new Promise(async (resolve, reject) => {
     try {
       // Create client
-      const client = new ComfyUIClient(comfyuiHost, clientId, eventEmitter);
+      const client = new ComfyUIClient(host, clientId, eventEmitter);
 
       // Connect to server
       await client.connect();
@@ -133,16 +135,36 @@ class Workflows extends DataService {
   }
 
   async view(querystring) {
-    return this.ctx.curl(`${comfyuiHost}/view?${querystring}`, {
+    const { key, ...query } = qs.parse(querystring)
+    let host = ''
+    try {
+      const res = await this.find({ key })
+      const workflow = res.data?.[0]
+      host = new URL(workflow.comfyui_url || defaultComfyuiUrl.origin).host
+    } catch (e: any) {
+      const message = `工作流读取失败: ${(e as Error).message}`
+      throw new Error(message);
+    }
+    return this.ctx.curl(`${host}/view?${qs.stringify(query)}`, {
       streaming: true
     })
   }
 
-  async uploadImage(file) {
+  async uploadImage(key, file) {
     const clientId = uuidv4()
+    let host = ''
+    try {
+      const res = await this.find({ key })
+      const workflow = res.data?.[0]
+      host = new URL(workflow.comfyui_url || defaultComfyuiUrl.origin).host
+    } catch (e: any) {
+      const message = `工作流读取失败: ${(e as Error).message}`
+      throw new Error(message);
+    }
+
     const image = fs.readFileSync(file.filepath)
-    const res = await uploadImage(image, file.filename, clientId, false)
-    const url = `/workflows/api/view?filename=${res.name}&${res.subfolder}&type=input`
+    const res = await uploadImage(host, image, file.filename, clientId, false)
+    const url = `/workflows/api/view?filename=${res.name}&${res.subfolder}&type=input&key=${key}`
     return {
       ...res,
       url
@@ -152,14 +174,6 @@ class Workflows extends DataService {
   async queue(param) {
     const { key, clientId } = param
 
-    this.app.ws.sendJsonTo('workflows', {
-      clientId,
-      type: 'running',
-      data: {
-        workflowKey: key,
-      }
-    })
-
     const emitError = (message) => {
       this.app.ws.sendJsonTo('workflows', {
         clientId,
@@ -168,18 +182,6 @@ class Workflows extends DataService {
           workflowKey: key,
           message
         }
-      })
-    }
-
-    const emitState = () => {
-      getQueueState(clientId).then((state) => {
-        this.app.ws.sendJsonTo('workflows', {
-          type: 'state',
-          data: {
-            pending: state.queue_pending.length,
-            running: state.queue_running.length,
-          }
-        })
       })
     }
 
@@ -197,6 +199,29 @@ class Workflows extends DataService {
       emitError(message)
       throw new Error(message);
     }
+
+    this.app.ws.sendJsonTo('workflows', {
+      clientId,
+      type: 'running',
+      data: {
+        workflowKey: key,
+      }
+    })
+
+    const uri = new URL(workflow.comfyui_url || defaultComfyuiUrl.origin)
+
+    const emitState = () => {
+      getQueueState(uri.host, clientId).then((state) => {
+        this.app.ws.sendJsonTo('workflows', {
+          type: 'state',
+          data: {
+            pending: state.queue_pending.length,
+            running: state.queue_running.length,
+          }
+        })
+      })
+    }
+
     let response: any = null;
     try {
       if (workflow.workflowType === 'comfyui') {
@@ -240,7 +265,7 @@ class Workflows extends DataService {
             }
             if (message.type === "progress") {
               const step = message.data.value / message.data.max * 100 * 1 / nodes.length / message.data.max
-              progress += step
+              progress = Number((progress + step).toFixed(2))
             }
             this.app.ws.sendJsonTo('workflows', {
               type: 'progress',
@@ -261,13 +286,13 @@ class Workflows extends DataService {
           emitState()
         }, 1000)
 
-        const { outputs } = await getOutputs(clientId, prompt, eventEmitter)
+        const { outputs } = await getOutputs(uri.host, clientId, prompt, eventEmitter)
         const { paramsNodes } = workflow
         const outputKeys = paramsNodes.filter(item => item.category === 'output').map(item => item.id.toString())
         response = {}
         Object.keys(outputs).forEach(key => {
           if (outputKeys.includes(key)) {
-            const imageUrls = outputs[key]?.images.filter(item => item.type === 'output').map(item => `/workflows/api/view?filename=${item.filename}&type=output`) || []
+            const imageUrls = outputs[key]?.images.filter(item => item.type === 'output').map(item => `/workflows/api/view?filename=${item.filename}&type=output&key=${workflow.key}`) || []
             response[key] = imageUrls.length ? imageUrls[imageUrls.length - 1] : outputs[key]
           }
         })
@@ -312,12 +337,22 @@ class Workflows extends DataService {
   }
 
   async deleteQueue(param) {
-    const { clientId, promptId } = param
+    const { key, clientId, promptId } = param
+    let host = ''
+    try {
+      const res = await this.find({ key })
+      const workflow = res.data?.[0]
+      host = new URL(workflow.comfyui_url || defaultComfyuiUrl.origin).host
+    } catch (e: any) {
+      const message = `工作流读取失败: ${(e as Error).message}`
+      throw new Error(message);
+    }
+
     let response
     if (promptId === currentPromptId) {
-      response = await interrupt(clientId);
+      response = await interrupt(host, clientId);
     } else {
-      response = await deleteQueue(clientId, promptId);
+      response = await deleteQueue(host, clientId, promptId);
     }
 
     return this.ctx.helper.getResponseData(response)

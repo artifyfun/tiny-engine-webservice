@@ -15,10 +15,10 @@ import { ComfyUIClient } from '@artifyfun/comfy-ui-client';
 import fs from 'fs-extra'
 import path from 'path'
 
-const comfyuiHost = '127.0.0.1:8188'
+const defaultComfyuiUrl = new URL('http://127.0.0.1:8188')
 
-function getQueueState(clientId) {
-  const client = new ComfyUIClient(comfyuiHost, clientId);
+function getQueueState(host, clientId) {
+  const client = new ComfyUIClient(host, clientId);
 
   return client.getQueue();
 }
@@ -32,7 +32,7 @@ export default class WorkflowsController extends Controller {
   public async comfyui() {
     // await this.ctx.render('comfyui')
     const pathName = '/comfyui'
-    const url = this.ctx.query.comfyui_url || 'http://127.0.0.1:8188'
+    const url = this.ctx.query.comfyui_url || defaultComfyuiUrl.origin
     const uri = new URL(url)
     if (this.ctx.request.url === '/comfyui/scripts/api.js') {
       const data = fs.readFileSync(path.join(__dirname, '../lib/comfyui-assets/api.js'), 'utf-8')
@@ -80,7 +80,8 @@ export default class WorkflowsController extends Controller {
   }
   async uploadImage() {
     const files = this.ctx.request.files
-    this.ctx.body = await this.service.workflows.uploadImage(files[0]);
+    const { key } = this.ctx.query
+    this.ctx.body = await this.service.workflows.uploadImage(key, files[0]);
     this.ctx.cleanupRequestFiles();
   }
   async queue() {
@@ -121,6 +122,34 @@ export default class WorkflowsController extends Controller {
       throw new Error('this function can only be use in websocket router');
     }
 
+    const emitError = (message) => {
+      this.app.ws.sendJsonTo('workflows', {
+        clientId: ctx.websocket?.protocol,
+        type: 'error',
+        data: {
+          workflowKey: ctx.query.key,
+          message
+        }
+      })
+    }
+
+    let comfyui_url = ''
+
+    try {
+      const res = await this.service.workflows.find({ key: ctx.query.key });
+      const workflow = res.data?.[0]
+      if (!workflow) {
+        const message = `工作流不存在: ${ctx.query.key}`
+        emitError(message)
+        return
+      }
+      comfyui_url = workflow.comfyui_url || defaultComfyuiUrl.origin
+    } catch (e: any) {
+      const message = `工作流读取失败: ${(e as Error).message}`
+      emitError(message)
+      return
+    }
+    
     console.log(`client connected: ${ctx.websocket.protocol}`);
 
     ctx.websocket.room.join('workflows', ({ message }) => {
@@ -137,8 +166,10 @@ export default class WorkflowsController extends Controller {
       data: true
     }));
 
+    const host = new URL(comfyui_url).host
+
     // 发送当前队列状态
-    getQueueState(ctx.websocket.protocol).then((state) => {
+    getQueueState(host, ctx.websocket.protocol).then((state) => {
       ctx.websocket?.room.sendJsonTo('workflows', {
         type: 'state',
         data: {

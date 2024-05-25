@@ -57,6 +57,7 @@ class AppsController extends Controller {
       'platform',
       'image_url',
       'action',
+      'comfyui_url'
     ], true)
     const { apps } = this.ctx.service.appCenter;
     this.ctx.validate(createAppRule, createParam);
