@@ -70,6 +70,10 @@ export default class WorkflowsController extends Controller {
     this.ctx.body = await this.service.workflows.find(queries);
   }
   async view() {
+    if (!this.ctx.query.key) {
+      this.ctx.body = this.getBadRequestResponse('key is required');
+      return;
+    }
     const querystring = this.ctx.querystring;
     const res = await this.service.workflows.view(querystring);
     this.ctx.body = res.res;
@@ -81,6 +85,10 @@ export default class WorkflowsController extends Controller {
   async uploadImage() {
     const files = this.ctx.request.files
     const { key } = this.ctx.query
+    if (!key) {
+      this.ctx.body = this.getBadRequestResponse('key is required');
+      return;
+    }
     this.ctx.body = await this.service.workflows.uploadImage(key, files[0]);
     this.ctx.cleanupRequestFiles();
   }
@@ -131,6 +139,11 @@ export default class WorkflowsController extends Controller {
           message
         }
       })
+    }
+
+    if (!ctx.query.key) {
+      emitError('key is required')
+      return
     }
 
     let comfyui_url = ''
