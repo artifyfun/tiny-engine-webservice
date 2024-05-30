@@ -92,7 +92,9 @@ class AppsController extends Controller {
   async deleteAppById() {
     const { id } = this.ctx.params;
     this.ctx.validate({ id: 'id' }, { id });
-    this.ctx.body = await this.service.appCenter.apps.delete({ id });
+    const res = await this.service.appCenter.apps.delete({ id });
+    await this.service.resource.delete(id);
+    this.ctx.body = res;
   }
 
 

@@ -20,7 +20,7 @@ export interface I_CreateAppParam {
   name: string;
   description?: string;
   platform: string;
-  image_url: string;
+  image_url?: string;
   action?: E_CreateAppAction
 }
 
@@ -36,5 +36,6 @@ export interface I_UpdateAppParam {
   latest?: string | number;
   data_hash?: string;
   assets_url?: string;
+  image_url?: string;
   extend_config?: object;
 }

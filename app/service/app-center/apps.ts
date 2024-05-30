@@ -15,6 +15,7 @@ import { E_Method, E_i18Belongs, E_I18nLangs } from '../../lib/enum';
 import { I_AppComplexInfo, I_Response } from '../../lib/interface';
 import { I_UpdateAppParam, I_CreateAppParam } from '../../interface/app-center/app';
 import DataService from '../dataService';
+import fs from 'fs-extra';
 class Apps extends DataService {
   async getAppList() {
     const res = await this.find({ filter_type: 'mine' });
@@ -45,6 +46,24 @@ class Apps extends DataService {
     });
     if (res.data) {
       res.data = this.convertRes(res.data);
+    }
+    if (param.image_url) {
+      const dir = param.image_url.split('/').slice(-2, -1)[0];
+      const fileName = param.image_url.split('/').slice(-1)[0];
+      const resourcePath = `./app/public/apps/${dir}/${fileName}`
+      const targetPath = `./app/public/apps/${res.data.id}/${fileName}`
+      try {
+        fs.cpSync(resourcePath, targetPath, { recursive: true });
+        fs.rmSync(resourcePath, { recursive: true });
+        const image_url = `/apps/${res.data.id}/${fileName}`;
+        await this.updateApp({
+          ...res.data,
+          image_url
+        })
+        res.data.image_url = image_url
+      } catch (error) {
+        console.log('更新图片失败', error);
+      }
     }
     return res;
   }

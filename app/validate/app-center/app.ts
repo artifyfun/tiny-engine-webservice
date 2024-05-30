@@ -18,11 +18,7 @@ export const createAppRule = {
     type: 'object',
     required: false
   },
-  image_url: {
-    type: 'url',
-    required: false,
-    allowEmpty: true
-  }
+  image_url: 'string?'
 };
 
 export const createAppByTemplateRule = {
@@ -47,11 +43,7 @@ export const updateAppRule = {
     required: false,
     allowEmpty: true
   },
-  image_url: {
-    type: 'url',
-    required: false,
-    allowEmpty: true
-  },
+  image_url: 'string?',
   config: {
     type: 'object',
     required: false
