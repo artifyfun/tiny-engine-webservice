@@ -17,11 +17,11 @@ export default class ResourceService extends Service {
   async upload(id, file) {
     const fileSubfix = file.filename.split('.').pop()
     const fileName = `${new Date().getTime()}.${fileSubfix}`;
-    const savePath = `./app/public/apps/${id}/${fileName}`;
+    const savePath = `./app/public/assets/apps/${id}/${fileName}`;
 
     fs.cpSync(file.filepath, savePath, { recursive: true });
     
-    const assetsUrl = `/apps/${id}/${fileName}`;
+    const assetsUrl = `/assets/apps/${id}/${fileName}`;
 
     return {
       url: assetsUrl,
@@ -31,7 +31,7 @@ export default class ResourceService extends Service {
 
   async delete(id) {
     try {
-      fs.rmSync(`./app/public/apps/${id}`, { recursive: true });
+      fs.rmSync(`./app/public/assets/apps/${id}`, { recursive: true });
     }
     finally {
       return true;

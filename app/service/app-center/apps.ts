@@ -50,12 +50,12 @@ class Apps extends DataService {
     if (param.image_url) {
       const dir = param.image_url.split('/').slice(-2, -1)[0];
       const fileName = param.image_url.split('/').slice(-1)[0];
-      const resourcePath = `./app/public/apps/${dir}/${fileName}`
-      const targetPath = `./app/public/apps/${res.data.id}/${fileName}`
+      const resourcePath = `./app/public/assets/apps/${dir}/${fileName}`
+      const targetPath = `./app/public/assets/apps/${res.data.id}/${fileName}`
       try {
         fs.cpSync(resourcePath, targetPath, { recursive: true });
         fs.rmSync(resourcePath, { recursive: true });
-        const image_url = `/apps/${res.data.id}/${fileName}`;
+        const image_url = `/assets/apps/${res.data.id}/${fileName}`;
         await this.updateApp({
           ...res.data,
           image_url

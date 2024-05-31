@@ -171,7 +171,7 @@ class AppPreview extends DataServcice {
       
       // 保存在本地
       const distPath = `${generatePath}.zip`;
-      const serverPath = `./app/public/apps/${codeFolder}.zip`;
+      const serverPath = `./app/public/assets/apps/${codeFolder}.zip`;
       try {
         fs.rmSync(serverPath, { recursive: true })
       } catch (e) {
@@ -180,7 +180,7 @@ class AppPreview extends DataServcice {
 
       fs.cpSync(distPath, serverPath, { recursive: true })
       
-      const assetsUrl = `/apps/${codeFolder}.zip`
+      const assetsUrl = `/assets/apps/${codeFolder}.zip`
       // 回填数据到应用表
       await apps.updateApp({
         id: appId,
