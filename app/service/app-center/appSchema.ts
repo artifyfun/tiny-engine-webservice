@@ -87,11 +87,11 @@ class AppSchema extends SchemaService {
   private getSchemaMeta(): I_Response {
     const appData = this.meta.app;
     // config属性当前为mock数据
-    appData.config = {
-      sdkVersion: '1.0.3',
-      historyMode: 'hash',
-      targetRootID: 'app'
-    };
+    // appData.config = {
+    //   sdkVersion: '1.0.3',
+    //   historyMode: 'hash',
+    //   targetRootID: 'app'
+    // };
     const param = this.ctx.helper.getResponseData(appData);
     return this.assembleFields(param);
   }

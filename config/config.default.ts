@@ -194,7 +194,8 @@ export default (appInfo) => {
         'created_at',
         'updated_at',
         'branch',
-        'global_state'
+        'global_state',
+        'config'
       ],
       format: {
         id: E_SchemaFormatFunc.ToFormatString,
