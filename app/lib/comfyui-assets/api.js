@@ -59,7 +59,7 @@ class ComfyApi extends EventTarget {
     }
     this.socket = new WebSocket(
       // `ws${window.location.protocol === "https:" ? "s" : ""}://${this.api_host}${this.api_base}/ws${existingSession}`
-      `ws://comfyui-host/ws`
+      `comfyui-ws/ws${existingSession}`
     );
     this.socket.binaryType = "arraybuffer";
 

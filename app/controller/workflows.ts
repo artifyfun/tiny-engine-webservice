@@ -37,7 +37,7 @@ export default class WorkflowsController extends Controller {
     if (this.ctx.request.url === '/comfyui/scripts/api.js') {
       const data = fs.readFileSync(path.join(__dirname, '../lib/comfyui-assets/api.js'), 'utf-8')
       this.ctx.set('Content-Type', 'application/javascript')
-      this.ctx.body = data.replaceAll('comfyui-host', uri.host)
+      this.ctx.body = data.replaceAll('comfyui-ws', `${uri.origin.replace('http', 'ws')}`)
       return
     }
     await this.ctx.proxyRequest(uri.host, {
