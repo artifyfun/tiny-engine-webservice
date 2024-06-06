@@ -29,4 +29,6 @@ export default (app: Application) => {
   subRouter.post('/deleteQueue', controller.workflows.deleteQueue);
   subRouter.post('/upload/image', controller.workflows.uploadImage);
   subRouter.get('/delete/:id', controller.workflows.delete);
+
+  app.ws.route('/workflows/ws', app.controller.workflows.state);
 };

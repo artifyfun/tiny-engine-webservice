@@ -27,6 +27,4 @@ export default (app: Application) => {
   
   router.get('/comfyui', controller.workflows.comfyui);
   router.get('/comfyui/*', controller.workflows.comfyui);
-
-  app.ws.route('/workflows', app.controller.workflows.state);
 };
