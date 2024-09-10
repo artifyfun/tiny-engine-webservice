@@ -30,14 +30,23 @@ const isValidParam = (id) => /^\d+$/.test(id);
  */
 export default class WorkflowsController extends Controller {
   public async comfyui() {
-    // await this.ctx.render('comfyui')
     const pathName = '/comfyui'
     const url = this.ctx.query.comfyui_url || defaultComfyuiUrl.origin
     const uri = new URL(url)
     if (this.ctx.request.url === '/comfyui/scripts/api.js') {
       const data = fs.readFileSync(path.join(__dirname, '../lib/comfyui-assets/api.js'), 'utf-8')
       this.ctx.set('Content-Type', 'application/javascript')
-      this.ctx.body = data.replaceAll('comfyui-ws', `${uri.origin.replace('http', 'ws')}`)
+      this.ctx.body = data
+        .replaceAll('location.pathname.split("/").slice(0, -1).join("/");', `'${pathName}';`)
+        .replaceAll('`ws${window.location.protocol === "https:" ? "s" : ""}://${this.api_host}${this.api_base}/ws${existingSession}`', `\`${uri.origin.replace('http', 'ws')}/ws\${existingSession}\``)
+      return
+    }
+    if (this.ctx.request.url === '/comfyui/assets/index-Dfv2aLsq.js') {
+      const data = fs.readFileSync(path.join(__dirname, '../lib/comfyui-assets/index-Dfv2aLsq.js'), 'utf-8')
+      this.ctx.set('Content-Type', 'application/javascript')
+      this.ctx.body = data
+      .replaceAll('location.pathname.split("/").slice(0, -1).join("/");', `'${pathName}';`)
+      .replaceAll('`ws${window.location.protocol === "https:" ? "s" : ""}://${this.api_host}${this.api_base}/ws${existingSession}`', `\`${uri.origin.replace('http', 'ws')}/ws\${existingSession}\``)
       return
     }
     await this.ctx.proxyRequest(uri.host, {
@@ -53,7 +62,11 @@ export default class WorkflowsController extends Controller {
           return proxyResult;
         }
         if (this.ctx.request.path === '/comfyui') {
-          const data = proxyResult.data.toString().replaceAll('./', `${pathName}/`)
+          const data = proxyResult.data.toString()
+            .replaceAll('href="./', `href="`)
+            .replaceAll('src="./', `src="`)
+            .replaceAll('href="', `href="${pathName}/`)
+            .replaceAll('src="', `src="${pathName}/`)
           this.ctx.set('Content-Type', 'text/html')
           return {
             ...proxyResult,

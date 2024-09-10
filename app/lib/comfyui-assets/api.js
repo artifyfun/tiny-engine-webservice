@@ -4,7 +4,7 @@ class ComfyApi extends EventTarget {
   constructor() {
     super();
     this.api_host = location.host;
-    this.api_base = `/comfyui`
+    this.api_base = location.pathname.split("/").slice(0, -1).join("/");
     this.initialClientId = sessionStorage.getItem("clientId");
   }
 
@@ -58,8 +58,7 @@ class ComfyApi extends EventTarget {
       existingSession = "?clientId=" + existingSession;
     }
     this.socket = new WebSocket(
-      // `ws${window.location.protocol === "https:" ? "s" : ""}://${this.api_host}${this.api_base}/ws${existingSession}`
-      `comfyui-ws/ws${existingSession}`
+      `ws${window.location.protocol === "https:" ? "s" : ""}://${this.api_host}${this.api_base}/ws${existingSession}`
     );
     this.socket.binaryType = "arraybuffer";
 
